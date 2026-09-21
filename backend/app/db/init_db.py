@@ -7,12 +7,21 @@ from app.models.model_registry import AIModelMetadata
 from app.models.dataset import DatasetSource
 from app.core.logging import logger
 
+from sqlalchemy import select
+
 async def init_database():
     logger.info("Initializing database schemas...")
     async with engine.begin() as conn:
-        # Drop all tables first for fresh clean prototype initialization
-        await conn.run_sync(Base.metadata.drop_all)
+        # Create tables if they don't exist
         await conn.run_sync(Base.metadata.create_all)
+
+    # Check if database is already seeded
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(Cyclone).limit(1))
+        existing_cyclone = result.scalar_one_or_none()
+        if existing_cyclone:
+            logger.info("Database already contains data. Skipping seed.")
+            return
 
     logger.info("Seeding realistic cyclone and meteorological records...")
     async with AsyncSessionLocal() as session:

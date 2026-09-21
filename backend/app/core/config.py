@@ -13,8 +13,11 @@ class Settings(BaseSettings):
         "track & cone forecasting, multi-hazard risk analysis, and CAP-compliant alert dissemination."
     )
     
-    # Database
-    DATABASE_URL: str = "sqlite+aiosqlite:///./varta.db"
+    # Database (Vercel uses read-only filesystem, so we use /tmp)
+    DATABASE_URL: str = Field(
+        default_factory=lambda: "sqlite+aiosqlite:////tmp/varta.db" 
+        if os.environ.get("VERCEL") else "sqlite+aiosqlite:///./varta.db"
+    )
     
     # Security / CORS
     CORS_ORIGINS: List[str] = ["*"]
